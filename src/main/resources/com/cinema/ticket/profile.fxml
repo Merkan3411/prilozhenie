@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<VBox xmlns="http://javafx.com/javafx/17.0.2-ea"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.cinema.ticket.controllers.ProfileController"
+      spacing="10.0">
+
+    <padding>
+        <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+    </padding>
+
+    <!-- Заголовок и навигация -->
+    <HBox spacing="10.0" alignment="CENTER_LEFT">
+        <Label fx:id="welcomeLabel" text="Личный кабинет">
+            <font>
+                <Font name="System Bold" size="18.0" />
+            </font>
+        </Label>
+    </HBox>
+
+    <HBox spacing="10.0" alignment="CENTER_LEFT">
+        <Button mnemonicParsing="false" onAction="#onMoviesClick" text="Фильмы" />
+        <Button mnemonicParsing="false" onAction="#onSessionsClick" text="Сеансы" />
+        <Button mnemonicParsing="false" onAction="#onLogoutClick" text="Выйти" />
+    </HBox>
+
+    <!-- Информация о пользователе -->
+    <VBox spacing="10.0" style="-fx-padding: 15; -fx-background-color: #f5f5f5; -fx-background-radius: 5;">
+        <Label text="👤 Информация о пользователе" style="-fx-font-weight: bold;" />
+        <Label fx:id="userInfoLabel" text="Загрузка..." style="-fx-text-fill: #666;" />
+
+        <HBox spacing="10.0" style="-fx-padding: 10 0 0 0;">
+            <Button fx:id="editProfileButton" mnemonicParsing="false" onAction="#onEditProfileClick" text="Редактировать профиль" />
+            <Button fx:id="changePasswordButton" mnemonicParsing="false" onAction="#onChangePasswordClick" text="Сменить пароль" />
+        </HBox>
+    </VBox>
+
+    <!-- История бронирований -->
+    <Label text="🎫 История бронирований" style="-fx-font-weight: bold;" />
+    <ScrollPane fitToWidth="true" vbarPolicy="ALWAYS" prefHeight="400.0">
+        <VBox fx:id="ticketsContainer" spacing="10.0" style="-fx-padding: 10;" />
+    </ScrollPane>
+</VBox>

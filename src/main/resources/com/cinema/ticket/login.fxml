@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Hyperlink?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<VBox alignment="CENTER" spacing="15.0" xmlns="http://javafx.com/javafx/17.0.2-ea"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.cinema.ticket.controllers.LoginController">
+
+    <padding>
+        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+    </padding>
+
+    <Label text="Вход в систему">
+        <font>
+            <Font name="System Bold" size="20.0" />
+        </font>
+    </Label>
+
+    <Label text="Имя пользователя:" />
+    <TextField fx:id="usernameField" promptText="Введите имя пользователя" prefWidth="250.0" />
+
+    <Label text="Пароль:" />
+    <PasswordField fx:id="passwordField" promptText="Введите пароль" prefWidth="250.0" />
+
+    <Button fx:id="loginButton" mnemonicParsing="false" onAction="#onLoginClick" prefHeight="35.0" prefWidth="250.0" text="Войти" />
+    <Button fx:id="backButton" mnemonicParsing="false" onAction="#onBackClick" prefHeight="35.0" prefWidth="250.0" text="Назад" />
+
+    <Hyperlink onAction="#onRegisterLinkClick" text="Нет аккаунта? Зарегистрируйтесь" />
+    <Hyperlink onAction="#onGuestLoginClick" text="Продолжить как гость" />
+</VBox>
