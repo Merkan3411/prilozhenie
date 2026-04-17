@@ -14,6 +14,7 @@ public class Review {
 
     public Review() {}
 
+
     public Review(int ticketId, int movieId, int userId, double rating, String reviewText) {
         this.ticketId = ticketId;
         this.movieId = movieId;

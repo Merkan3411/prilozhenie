@@ -135,6 +135,7 @@ public class MovieDAO {
             movie.setPosterUrl(null);
         }
 
+
         if (json.has("trailer_url") && !json.get("trailer_url").isJsonNull()) {
             String trailer = json.get("trailer_url").getAsString().trim();
             movie.setTrailerUrl(trailer.isEmpty() ? null : trailer);

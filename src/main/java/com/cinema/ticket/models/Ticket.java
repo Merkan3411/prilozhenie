@@ -47,6 +47,7 @@ public class Ticket {
     public LocalDateTime getPurchaseDate() { return purchaseDate; }
     public void setPurchaseDate(LocalDateTime purchaseDate) { this.purchaseDate = purchaseDate; }
 
+
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
 

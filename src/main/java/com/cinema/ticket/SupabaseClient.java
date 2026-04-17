@@ -34,6 +34,7 @@ public class SupabaseClient {
                 .GET()
                 .build();
 
+
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
         if (response.statusCode() >= 200 && response.statusCode() < 300) {

@@ -25,6 +25,7 @@
             <font><Font name="System Bold" size="22.0"/></font>
         </Label>
 
+
         <Region HBox.hgrow="ALWAYS"/>
 
         <TextField fx:id="searchField" promptText="🔍  Поиск фильмов..." prefWidth="240.0"

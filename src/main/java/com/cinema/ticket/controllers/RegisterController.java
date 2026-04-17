@@ -32,6 +32,7 @@ public class RegisterController {
     @FXML
     private PasswordField confirmPasswordField;
 
+
     @FXML
     private Label fullNameCountLabel;
 

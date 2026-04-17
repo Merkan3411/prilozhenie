@@ -26,6 +26,7 @@
         -fx-text-fill: #e0e0e0;
         }
 
+
         .table-row-cell:odd {
         -fx-background-color: #1a2540;
         }

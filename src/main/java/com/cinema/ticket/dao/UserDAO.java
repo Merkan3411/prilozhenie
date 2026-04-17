@@ -26,6 +26,7 @@ public class UserDAO {
         return null;
     }
 
+
     public User getUserById(int id) {
         try {
             JsonArray results = SupabaseClient.select("users",

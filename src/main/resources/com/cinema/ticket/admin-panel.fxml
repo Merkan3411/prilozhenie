@@ -25,6 +25,7 @@
         </HBox>
     </top>
 
+
     <center>
         <TabPane fx:id="adminTabPane" tabClosingPolicy="UNAVAILABLE"
                  style="-fx-background-color: #0f0f0f;

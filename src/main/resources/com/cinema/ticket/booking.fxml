@@ -23,6 +23,7 @@
     </top>
 
     <center>
+
         <ScrollPane fitToWidth="true"
                     style="-fx-background-color: transparent;
                            -fx-background: transparent;">

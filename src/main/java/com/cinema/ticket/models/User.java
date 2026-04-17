@@ -25,6 +25,7 @@ public class User {
         this.isActive = isActive;
     }
 
+
     public static User createGuest() {
         User guest = new User();
         guest.setId(0);

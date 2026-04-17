@@ -41,6 +41,7 @@ public class ReviewDAO {
         return null;
     }
 
+
     public double getAverageRating(int movieId) {
         try {
             JsonArray result = SupabaseClient.select("reviews",

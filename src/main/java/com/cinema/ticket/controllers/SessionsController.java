@@ -35,6 +35,7 @@ public class SessionsController {
         initializeFilters();
     }
 
+
     public void setCurrentUser(User user) {
         this.currentUser = user;
     }

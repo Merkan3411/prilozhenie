@@ -25,6 +25,7 @@
         </Label>
     </VBox>
 
+
     <VBox alignment="CENTER" spacing="14"
           style="-fx-background-color: #16213e;
                  -fx-background-radius: 20;

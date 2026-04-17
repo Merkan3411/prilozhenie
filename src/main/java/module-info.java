@@ -19,3 +19,4 @@ module ticket.system {
     exports com.cinema.ticket.models;
     exports com.cinema.ticket.dao;
 }
+

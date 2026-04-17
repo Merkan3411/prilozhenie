@@ -103,6 +103,7 @@ public class MovieCardController {
         new Thread(task).start();
     }
 
+
     private void loadPosterImageAsync() {
         String rawPoster = movie.getPosterUrl();
 

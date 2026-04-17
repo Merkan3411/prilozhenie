@@ -29,6 +29,7 @@ public class SessionDAO {
         return sessions;
     }
 
+
     public List<Session> getSessionsByMovieId(int movieId) {
         List<Session> sessions = new ArrayList<>();
         try {

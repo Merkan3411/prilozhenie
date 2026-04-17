@@ -25,6 +25,7 @@
                    preserveRatio="true" smooth="true" cache="true"/>
     </StackPane>
 
+
     <Label fx:id="titleLabel" wrapText="true"
            alignment="CENTER" textAlignment="CENTER"
            style="-fx-font-weight: bold;

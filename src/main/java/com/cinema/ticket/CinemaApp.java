@@ -31,3 +31,4 @@ public class CinemaApp extends Application {
         launch(args);
     }
 }
+

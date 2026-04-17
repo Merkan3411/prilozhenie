@@ -15,6 +15,7 @@ public class Movie {
     public Movie() {
     }
 
+
     public Movie(int id, String title, String description, String genre, int duration,
                  String ageRating, double rating, String posterUrl, String trailerUrl, boolean isActive) {
         this.id = id;

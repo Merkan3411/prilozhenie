@@ -41,6 +41,7 @@ public class TrailerPlayer {
         }
     }
 
+
     private static void showMediaPlayer(String url, String movieTitle) {
         Stage stage = new Stage();
         stage.initModality(Modality.APPLICATION_MODAL);

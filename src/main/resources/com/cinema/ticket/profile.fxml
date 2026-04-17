@@ -22,6 +22,7 @@
                  -fx-padding: 15 20;
                  -fx-effect: dropshadow(gaussian, rgba(229,9,20,0.15), 10, 0, 0, 3);">
 
+
         <Label text="Личный кабинет"
                style="-fx-text-fill: #ffffff; -fx-font-weight: bold;">
             <font><Font name="System Bold" size="22.0"/></font>

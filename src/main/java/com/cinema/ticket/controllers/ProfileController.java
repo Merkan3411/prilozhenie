@@ -57,6 +57,7 @@ public class ProfileController {
         }
     }
 
+
     // гость
     private void showGuestProfile() {
         userInfoLabel.setText("Вы не авторизованы");
