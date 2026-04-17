@@ -44,3 +44,8 @@ public class Session {
         return movieTitle + " - " + sessionDate + " " + sessionTime + " (Зал: " + hallNumber + ")";
     }
 }
+
+
+
+
+
