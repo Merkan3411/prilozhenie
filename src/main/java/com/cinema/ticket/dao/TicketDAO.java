@@ -1,101 +1,229 @@
 package com.cinema.ticket.dao;
 
-import com.cinema.ticket.DatabaseConnection;
-import com.cinema.ticket.Ticket;
-import java.sql.*;
+import com.cinema.ticket.models.Ticket;
+import com.cinema.ticket.SupabaseClient;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class TicketDAO {
 
-    public boolean bookTicket(Ticket ticket) {
-        String sql = "INSERT INTO tickets (session_id, user_id, row_number, seat_number, total_price) VALUES (?, ?, ?, ?, ?)";
-
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-            pstmt.setInt(1, ticket.getSessionId());
-            pstmt.setInt(2, ticket.getUserId());
-            pstmt.setInt(3, ticket.getRowNumber());
-            pstmt.setInt(4, ticket.getSeatNumber());
-            pstmt.setDouble(5, ticket.getTotalPrice());
-
-            return pstmt.executeUpdate() > 0;
-
-        } catch (SQLException e) {
-            System.err.println("Error booking ticket: " + e.getMessage());
-            return false;
-        }
-    }
-
-    public List<Ticket> getUserTickets(int userId) {
+    public List<Ticket> getAllTickets() {
         List<Ticket> tickets = new ArrayList<>();
-        String sql = """
-            SELECT t.*, m.title as movie_title, s.session_time 
-            FROM tickets t 
-            JOIN sessions s ON t.session_id = s.id 
-            JOIN movies m ON s.movie_id = m.id 
-            WHERE t.user_id = ? 
-            ORDER BY t.purchase_date DESC
-            """;
-
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-            pstmt.setInt(1, userId);
-            ResultSet rs = pstmt.executeQuery();
-
-            while (rs.next()) {
-                Ticket ticket = new Ticket();
-                ticket.setId(rs.getInt("id"));
-                ticket.setSessionId(rs.getInt("session_id"));
-                ticket.setUserId(rs.getInt("user_id"));
-                ticket.setRowNumber(rs.getInt("row_number"));
-                ticket.setSeatNumber(rs.getInt("seat_number"));
-                ticket.setPurchaseDate(rs.getTimestamp("purchase_date").toLocalDateTime());
-                ticket.setStatus(rs.getString("status"));
-                ticket.setTotalPrice(rs.getDouble("total_price"));
-                ticket.setMovieTitle(rs.getString("movie_title"));
-                ticket.setSessionTime(rs.getTime("session_time").toString());
-                tickets.add(ticket);
+        try {
+            JsonElement result = SupabaseClient.selectRaw("tickets", "order=id.desc");
+            if (result.isJsonArray()) {
+                JsonArray array = result.getAsJsonArray();
+                for (int i = 0; i < array.size(); i++) {
+                    tickets.add(mapJsonToTicket(array.get(i).getAsJsonObject()));
+                }
             }
-
-        } catch (SQLException e) {
-            System.err.println("Error getting user tickets: " + e.getMessage());
+        } catch (Exception e) {
+            System.err.println("Error getting tickets: " + e.getMessage());
         }
         return tickets;
     }
 
-    public boolean isSeatAvailable(int sessionId, int row, int seat) {
-        String sql = "SELECT id FROM tickets WHERE session_id = ? AND row_number = ? AND seat_number = ? AND status != 'CANCELLED'";
+    public List<Ticket> getTicketsByUserId(int userId) {
+        List<Ticket> tickets = new ArrayList<>();
+        try {
+            String query = "user_id=eq." + userId + "&select=*,sessions(session_time,session_date,movie_id,movies(title))&order=purchase_date.desc";
 
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            JsonElement result = SupabaseClient.selectRaw("tickets", query);
 
-            pstmt.setInt(1, sessionId);
-            pstmt.setInt(2, row);
-            pstmt.setInt(3, seat);
-            ResultSet rs = pstmt.executeQuery();
+            if (result.isJsonArray()) {
+                JsonArray array = result.getAsJsonArray();
+                for (int i = 0; i < array.size(); i++) {
+                    Ticket ticket = mapJsonToTicketWithMovie(array.get(i).getAsJsonObject());
+                    if (ticket != null) {
+                        tickets.add(ticket);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Error getting tickets by user: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return tickets;
+    }
 
-            return !rs.next(); // Если нет записей - место свободно
+    public List<Ticket> getTicketsBySessionId(int sessionId) {
+        List<Ticket> tickets = new ArrayList<>();
+        try {
+            JsonElement result = SupabaseClient.selectRaw("tickets", "session_id=eq." + sessionId + "&order=id.desc");
 
-        } catch (SQLException e) {
-            System.err.println("Error checking seat availability: " + e.getMessage());
+            if (result.isJsonArray()) {
+                JsonArray array = result.getAsJsonArray();
+                for (int i = 0; i < array.size(); i++) {
+                    tickets.add(mapJsonToTicket(array.get(i).getAsJsonObject()));
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Error getting tickets by session: " + e.getMessage());
+        }
+        return tickets;
+    }
+
+    public boolean isSeatOccupied(int sessionId, int seatNumber) {
+        try {
+            String query = "session_id=eq." + sessionId + "&seat_number=eq." + seatNumber;
+            JsonElement result = SupabaseClient.selectRaw("tickets", query);
+
+            if (result.isJsonArray()) {
+                JsonArray array = result.getAsJsonArray();
+                return array.size() > 0;
+            }
+        } catch (Exception e) {
+            System.err.println("Error checking seat: " + e.getMessage());
+        }
+        return false;
+    }
+
+    public boolean createTicket(Ticket ticket) {
+        try {
+            Map<String, Object> data = new HashMap<>();
+            data.put("session_id", ticket.getSessionId());
+            data.put("user_id", ticket.getUserId());
+            data.put("row_number", ticket.getRowNumber());
+            data.put("seat_number", ticket.getSeatNumber());
+            data.put("total_price", ticket.getTotalPrice());
+            data.put("status", ticket.getStatus());
+            data.put("purchase_date", LocalDateTime.now().toString());
+
+            SupabaseClient.insert("tickets", data);
+            return true;
+        } catch (Exception e) {
+            System.err.println("Error creating ticket: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public boolean addTicket(Ticket ticket) {
+        try {
+            Map<String, Object> data = new HashMap<>();
+            data.put("session_id", ticket.getSessionId());
+            data.put("user_id", ticket.getUserId());
+            data.put("row_number", ticket.getRowNumber());
+            data.put("seat_number", ticket.getSeatNumber());
+            data.put("total_price", ticket.getTotalPrice());
+            data.put("status", ticket.getStatus());
+            data.put("purchase_date", LocalDateTime.now().toString());
+
+            SupabaseClient.insert("tickets", data);
+            return true;
+        } catch (Exception e) {
             return false;
         }
     }
 
-    public boolean cancelTicket(int ticketId) {
-        String sql = "UPDATE tickets SET status = 'CANCELLED' WHERE id = ?";
+    public boolean deleteTicket(int ticketId) {
+        try {
+            SupabaseClient.delete("tickets", "id=eq." + ticketId);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
 
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            pstmt.setInt(1, ticketId);
-            return pstmt.executeUpdate() > 0;
+    public boolean updateTicketStatus(int ticketId, String status) {
+        try {
+            Map<String, Object> data = new HashMap<>();
+            data.put("status", status);
+            SupabaseClient.update("tickets", "id=eq." + ticketId, data);
+            return true;
+        } catch (Exception e) {
+            System.err.println("Error updating ticket status: " + e.getMessage());
+            return false;
+        }
+    }
 
-        } catch (SQLException e) {
-            System.err.println("Error cancelling ticket: " + e.getMessage());
+    private Ticket mapJsonToTicket(JsonObject json) {
+        Ticket ticket = new Ticket();
+        ticket.setId(json.get("id").getAsInt());
+        ticket.setSessionId(json.get("session_id").getAsInt());
+        ticket.setUserId(json.get("user_id").getAsInt());
+        ticket.setRowNumber(json.get("row_number").getAsInt());
+        ticket.setSeatNumber(json.get("seat_number").getAsInt());
+        ticket.setPurchaseDate(LocalDateTime.parse(json.get("purchase_date").getAsString()));
+        ticket.setStatus(json.get("status").getAsString());
+        ticket.setTotalPrice(json.get("total_price").getAsDouble());
+        return ticket;
+    }
+
+    private Ticket mapJsonToTicketWithMovie(JsonObject json) {
+        try {
+            Ticket ticket = new Ticket();
+            ticket.setId(json.get("id").getAsInt());
+            ticket.setSessionId(json.get("session_id").getAsInt());
+            ticket.setUserId(json.get("user_id").getAsInt());
+            ticket.setRowNumber(json.get("row_number").getAsInt());
+            ticket.setSeatNumber(json.get("seat_number").getAsInt());
+            ticket.setPurchaseDate(LocalDateTime.parse(json.get("purchase_date").getAsString()));
+            ticket.setStatus(json.get("status").getAsString());
+            ticket.setTotalPrice(json.get("total_price").getAsDouble());
+
+            if (json.has("sessions") && !json.get("sessions").isJsonNull()) {
+                JsonElement sessionsElement = json.get("sessions");
+                JsonObject sessionObj = null;
+
+                if (sessionsElement.isJsonObject()) {
+                    sessionObj = sessionsElement.getAsJsonObject();
+                } else if (sessionsElement.isJsonArray()) {
+                    JsonArray sessionsArray = sessionsElement.getAsJsonArray();
+                    if (sessionsArray.size() > 0) {
+                        sessionObj = sessionsArray.get(0).getAsJsonObject();
+                    }
+                }
+
+                if (sessionObj != null) {
+                    if (sessionObj.has("session_time") && !sessionObj.get("session_time").isJsonNull()) {
+                        ticket.setSessionTime(sessionObj.get("session_time").getAsString());
+                    }
+
+                    if (sessionObj.has("movie_id") && !sessionObj.get("movie_id").isJsonNull()) {
+                        ticket.setMovieId(sessionObj.get("movie_id").getAsInt());
+                    }
+
+                    if (sessionObj.has("movies") && !sessionObj.get("movies").isJsonNull()) {
+                        JsonElement moviesElement = sessionObj.get("movies");
+                        JsonObject movieObj = null;
+
+                        if (moviesElement.isJsonObject()) {
+                            movieObj = moviesElement.getAsJsonObject();
+                        } else if (moviesElement.isJsonArray()) {
+                            JsonArray moviesArray = moviesElement.getAsJsonArray();
+                            if (moviesArray.size() > 0) {
+                                movieObj = moviesArray.get(0).getAsJsonObject();
+                            }
+                        }
+
+                        if (movieObj != null && movieObj.has("title")) {
+                            ticket.setMovieTitle(movieObj.get("title").getAsString());
+                        }
+                    }
+                }
+            }
+
+            return ticket;
+        } catch (Exception e) {
+            System.err.println("Error mapping ticket with movie: " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
+
+    }
+    public boolean deleteAllTicketsByUserId(int userId) {
+        try {
+            SupabaseClient.delete("tickets", "user_id=eq." + userId);
+            return true;
+        } catch (Exception e) {
             return false;
         }
     }

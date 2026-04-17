@@ -1,48 +1,64 @@
 package com.cinema.ticket.models;
 
+import java.time.LocalDateTime;
+
 public class User {
     private int id;
+    private String fullName;
+    private String email;
     private String username;
     private String password;
-    private String email;
-    private String fullName;
     private String role;
+    private boolean isActive;
+    private LocalDateTime createdAt;
 
-    // Конструктор по умолчанию (для гостей и TableView)
     public User() {
-        this.username = "guest";
-        this.fullName = "Гость";
-        this.role = "GUEST";
-        this.email = "guest@cinema.com";
-        this.password = "";
     }
 
-    // Конструктор для регистрации пользователей
-    public User(String username, String password, String email, String fullName, String role) {
+    public User(int id, String fullName, String email, String username, String password, String role, boolean isActive) {
+        this.id = id;
+        this.fullName = fullName;
+        this.email = email;
         this.username = username;
         this.password = password;
-        this.email = email;
-        this.fullName = fullName;
         this.role = role;
+        this.isActive = isActive;
     }
 
-    // Конструктор для гостя
     public static User createGuest() {
         User guest = new User();
-        guest.setUsername("guest");
+        guest.setId(0);
         guest.setFullName("Гость");
+        guest.setEmail("guest@cinema.local");
+        guest.setUsername("guest");
+        guest.setPassword("");
         guest.setRole("GUEST");
-        guest.setEmail("guest@cinema.com");
+        guest.setActive(true);
         return guest;
     }
 
-    // Геттеры и сеттеры
     public int getId() {
         return id;
     }
 
     public void setId(int id) {
         this.id = id;
+    }
+
+    public String getFullName() {
+        return fullName;
+    }
+
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public String getUsername() {
@@ -61,22 +77,6 @@ public class User {
         this.password = password;
     }
 
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getFullName() {
-        return fullName;
-    }
-
-    public void setFullName(String fullName) {
-        this.fullName = fullName;
-    }
-
     public String getRole() {
         return role;
     }
@@ -85,49 +85,43 @@ public class User {
         this.role = role;
     }
 
-    // Вспомогательные методы
+    public boolean isActive() {
+        return isActive;
+    }
+
+    public void setActive(boolean active) {
+        isActive = active;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
     public boolean isAdmin() {
         return "ADMIN".equals(role);
     }
 
-    public boolean isClient() {
-        return "CLIENT".equals(role);
+    public boolean isUser() {
+        return "USER".equals(role);
     }
 
     public boolean isGuest() {
         return "GUEST".equals(role);
     }
 
-    public String getRoleDisplayName() {
-        switch (role) {
-            case "ADMIN": return "Администратор";
-            case "CLIENT": return "Клиент";
-            case "GUEST": return "Гость";
-            default: return role;
-        }
-    }
-
     @Override
     public String toString() {
         return "User{" +
                 "id=" + id +
-                ", username='" + username + '\'' +
-                ", email='" + email + '\'' +
                 ", fullName='" + fullName + '\'' +
+                ", email='" + email + '\'' +
+                ", username='" + username + '\'' +
                 ", role='" + role + '\'' +
+                ", isActive=" + isActive +
                 '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        User user = (User) o;
-        return id == user.id && username.equals(user.username);
-    }
-
-    @Override
-    public int hashCode() {
-        return java.util.Objects.hash(id, username);
     }
 }

@@ -1,281 +1,422 @@
 package com.cinema.ticket.controllers;
 
-import com.cinema.ticket.dao.TicketDAO;
-import com.cinema.ticket.models.Ses sion;
-import com.cinema.ticket.models.Ticket;
+import com.cinema.ticket.CinemaApp;
 import com.cinema.ticket.models.User;
+import com.cinema.ticket.models.Movie;
+import com.cinema.ticket.models.Session;
+import com.cinema.ticket.models.Ticket;
+import com.cinema.ticket.dao.SessionDAO;
+import com.cinema.ticket.dao.TicketDAO;
+
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
-import javafx.scene.shape.Rectangle;
+import javafx.scene.layout.*;
 import javafx.stage.Stage;
 
 import java.io.IOException;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
 public class BookingController {
 
     @FXML private Label movieTitleLabel;
-    @FXML private Label sessionInfoLabel;
-    @FXML private Label hallLabel;
-    @FXML private Label priceLabel;
-    @FXML private GridPane seatsGrid;
+    @FXML private Label stepLabel;
+    @FXML private VBox seatsContainer;
     @FXML private Label selectedSeatsLabel;
     @FXML private Label totalPriceLabel;
     @FXML private Button bookButton;
-    @FXML private Button buyButton;
 
-    private Session currentSession;
     private User currentUser;
-    private TicketDAO ticketDAO = new TicketDAO();
-    private List<String> selectedSeats = new ArrayList<>();
-    private int rows = 8;
-    private int seatsPerRow = 10;
+    private Movie selectedMovie;
+    private Session selectedSession;
+    private final SessionDAO sessionDAO = new SessionDAO();
+    private final TicketDAO ticketDAO = new TicketDAO();
+    private final List<Integer> selectedSeats = new ArrayList<>();
+
+    private static final double TICKET_PRICE = 250.0;
+    private static final int ROWS = 9;
+    private static final int SEATS_PER_ROW = 10;
 
     @FXML
-    public void initialize() {
-        initializeSeatGrid();
-    }
-
-    public void setCurrentSession(Session session) {
-        this.currentSession = session;
-        updateSessionInfo();
-        updateSeatAvailability();
-    }
+    public void initialize() {}
 
     public void setCurrentUser(User user) {
         this.currentUser = user;
     }
 
-    private void updateSessionInfo() {
-        if (currentSession != null) {
-            DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-            DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
-
-            movieTitleLabel.setText(currentSession.getMovieTitle());
-            sessionInfoLabel.setText("📅 " + currentSession.getSessionDate().format(dateFormatter) +
-                    "  🕒 " + currentSession.getSessionTime().format(timeFormatter));
-            hallLabel.setText("🎭 " + currentSession.getHallName());
-            priceLabel.setText("💵 " + currentSession.getPrice() + " руб. за место");
+    public void setMovie(Movie movie) {
+        this.selectedMovie = movie;
+        if (movieTitleLabel != null) {
+            movieTitleLabel.setText("🎬 " + movie.getTitle());
         }
+        showSessionStep();
     }
 
-    private void initializeSeatGrid() {
-        seatsGrid.getChildren().clear();
-        seatsGrid.setHgap(5);
-        seatsGrid.setVgap(5);
+    // Выбор сеанса
+    private void showSessionStep() {
+        seatsContainer.getChildren().clear();
+        selectedSeats.clear();
+        updateBottomBar();
+        stepLabel.setText("Выберите сеанс");
 
-        for (int row = 0; row < rows; row++) {
-            Label rowLabel = new Label("Ряд " + (row + 1));
-            rowLabel.setStyle("-fx-font-weight: bold;");
-            seatsGrid.add(rowLabel, 0, row);
+        List<Session> sessions = sessionDAO.getSessionsByMovieId(selectedMovie.getId());
+
+        if (sessions.isEmpty()) {
+            Label noSessions = new Label("Нет доступных сеансов для этого фильма");
+            noSessions.setStyle(
+                    "-fx-font-size: 14;" +
+                            "-fx-text-fill: #e50914;" +
+                            "-fx-padding: 30;"
+            );
+            seatsContainer.getChildren().add(noSessions);
+            return;
         }
 
-        for (int row = 0; row < rows; row++) {
-            for (int seat = 0; seat < seatsPerRow; seat++) {
-                Button seatButton = createSeatButton(row + 1, seat + 1);
-                seatsGrid.add(seatButton, seat + 1, row);
+        VBox sessionList = new VBox(14);
+        sessionList.setPadding(new Insets(15));
+        sessionList.setAlignment(Pos.TOP_CENTER);
+
+        Label hint = new Label("Выберите удобный сеанс:");
+        hint.setStyle(
+                "-fx-font-size: 14;" +
+                        "-fx-text-fill: #d0d0d0;" +
+                        "-fx-padding: 0 0 10 0;"
+        );
+        sessionList.getChildren().add(hint);
+
+        for (Session session : sessions) {
+            Button sessionBtn = new Button();
+            sessionBtn.setPrefWidth(460);
+            sessionBtn.setPrefHeight(62);
+
+            String dateStr = session.getSessionDate() != null ? session.getSessionDate() : "—";
+            String timeStr = session.getSessionTime() != null ? session.getSessionTime() : "—";
+            sessionBtn.setText("📅  " + dateStr + "     🕐  " + timeStr +
+                    "     |     Зал №" + session.getHallNumber());
+
+            String normalStyle =
+                    "-fx-background-color: #16213e;" +
+                            "-fx-border-color: #e50914;" +
+                            "-fx-border-width: 2;" +
+                            "-fx-border-radius: 10;" +
+                            "-fx-background-radius: 10;" +
+                            "-fx-font-size: 14;" +
+                            "-fx-font-weight: bold;" +
+                            "-fx-text-fill: #ffffff;" +
+                            "-fx-cursor: hand;" +
+                            "-fx-effect: dropshadow(gaussian, rgba(229,9,20,0.2), 10, 0, 0, 2);";
+
+            String hoverStyle =
+                    "-fx-background-color: #e50914;" +
+                            "-fx-border-color: #e50914;" +
+                            "-fx-border-width: 2;" +
+                            "-fx-border-radius: 10;" +
+                            "-fx-background-radius: 10;" +
+                            "-fx-font-size: 14;" +
+                            "-fx-font-weight: bold;" +
+                            "-fx-text-fill: #ffffff;" +
+                            "-fx-cursor: hand;" +
+                            "-fx-effect: dropshadow(gaussian, rgba(229,9,20,0.5), 15, 0, 0, 4);";
+
+            sessionBtn.setStyle(normalStyle);
+            sessionBtn.setOnMouseEntered(e -> sessionBtn.setStyle(hoverStyle));
+            sessionBtn.setOnMouseExited(e -> sessionBtn.setStyle(normalStyle));
+            sessionBtn.setOnAction(e -> {
+                this.selectedSession = session;
+                showSeatsStep();
+            });
+
+            sessionList.getChildren().add(sessionBtn);
+        }
+
+        seatsContainer.getChildren().add(sessionList);
+    }
+
+    // Выбор мест
+    private void showSeatsStep() {
+        seatsContainer.getChildren().clear();
+        selectedSeats.clear();
+        updateBottomBar();
+
+        String dateStr = selectedSession.getSessionDate() != null
+                ? selectedSession.getSessionDate() : "—";
+        String timeStr = selectedSession.getSessionTime() != null
+                ? selectedSession.getSessionTime() : "—";
+
+        stepLabel.setText("Выберите места  |  📅 " + dateStr +
+                "  🕐 " + timeStr + "  | Зал №" + selectedSession.getHallNumber());
+
+        // Кнопка назад
+        Button backBtn = new Button("← Назад к сеансам");
+        String backNormal =
+                "-fx-background-color: transparent;" +
+                        "-fx-text-fill: #e50914;" +
+                        "-fx-border-color: #e50914;" +
+                        "-fx-border-width: 1;" +
+                        "-fx-border-radius: 8;" +
+                        "-fx-background-radius: 8;" +
+                        "-fx-padding: 7 16;" +
+                        "-fx-cursor: hand;" +
+                        "-fx-font-weight: bold;" +
+                        "-fx-font-size: 13;";
+        String backHover =
+                "-fx-background-color: #e50914;" +
+                        "-fx-text-fill: #ffffff;" +
+                        "-fx-border-color: #e50914;" +
+                        "-fx-border-width: 1;" +
+                        "-fx-border-radius: 8;" +
+                        "-fx-background-radius: 8;" +
+                        "-fx-padding: 7 16;" +
+                        "-fx-cursor: hand;" +
+                        "-fx-font-weight: bold;" +
+                        "-fx-font-size: 13;";
+        backBtn.setStyle(backNormal);
+        backBtn.setOnMouseEntered(e -> backBtn.setStyle(backHover));
+        backBtn.setOnMouseExited(e -> backBtn.setStyle(backNormal));
+        backBtn.setOnAction(e -> showSessionStep());
+        seatsContainer.getChildren().add(backBtn);
+
+        seatsContainer.getChildren().add(createScreenBox());
+
+        // Места
+        VBox seatsBox = new VBox(8);
+        seatsBox.setAlignment(Pos.CENTER);
+
+        for (int row = 1; row <= ROWS; row++) {
+            HBox rowBox = new HBox(6);
+            rowBox.setAlignment(Pos.CENTER);
+
+            Label leftNum = new Label(String.valueOf(row));
+            leftNum.setStyle("-fx-font-weight: bold; -fx-font-size: 12; -fx-text-fill: #7a7a9a;");
+            leftNum.setPrefWidth(30);
+            leftNum.setAlignment(Pos.CENTER);
+            rowBox.getChildren().add(leftNum);
+
+            for (int seat = 1; seat <= SEATS_PER_ROW; seat++) {
+                rowBox.getChildren().add(createSeatButton(row, seat, selectedSession.getId()));
             }
+
+            Label rightNum = new Label(String.valueOf(row));
+            rightNum.setStyle("-fx-font-weight: bold; -fx-font-size: 12; -fx-text-fill: #7a7a9a;");
+            rightNum.setPrefWidth(30);
+            rightNum.setAlignment(Pos.CENTER);
+            rowBox.getChildren().add(rightNum);
+
+            seatsBox.getChildren().add(rowBox);
         }
 
-        HBox legend = createLegend();
-        seatsGrid.add(legend, 0, rows, seatsPerRow + 1, 1);
+        seatsContainer.getChildren().add(seatsBox);
+        seatsContainer.getChildren().add(createLegendBox());
     }
 
-    private Button createSeatButton(int row, int seat) {
-        Button button = new Button(seat + "");
-        button.setPrefSize(30, 30);
-        button.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white;");
+    // UI компоненты
+    private VBox createScreenBox() {
+        VBox box = new VBox(6);
+        box.setAlignment(Pos.CENTER);
+        box.setStyle(
+                "-fx-padding: 18;" +
+                        "-fx-border-color: #2a2a5a;" +
+                        "-fx-border-radius: 8;" +
+                        "-fx-background-color: #16213e;" +
+                        "-fx-background-radius: 8;"
+        );
 
-        button.setOnAction(e -> onSeatSelect(row, seat, button));
+        Label screen = new Label("🎥  ЭКРАН");
+        screen.setStyle(
+                "-fx-font-size: 15;" +
+                        "-fx-font-weight: bold;" +
+                        "-fx-text-fill: #ffffff;" +
+                        "-fx-letter-spacing: 4;"
+        );
 
-        return button;
+        Separator sep = new Separator();
+        sep.setStyle("-fx-background-color: #2a2a5a;");
+
+        Label info = new Label("← Смотреть отсюда →");
+        info.setStyle("-fx-font-size: 12; -fx-text-fill: #7a7a9a; -fx-padding: 6 0 0 0;");
+
+        box.getChildren().addAll(screen, sep, info);
+        return box;
     }
 
-    private HBox createLegend() {
-        HBox legend = new HBox(10);
-        legend.setStyle("-fx-padding: 10; -fx-alignment: center;");
+    private Button createSeatButton(int row, int seat, int sessionId) {
+        Button btn = new Button(row + "-" + seat);
+        btn.setPrefWidth(36);
+        btn.setPrefHeight(36);
 
-        VBox availableBox = new VBox(5);
-        Rectangle availableRect = new Rectangle(20, 20, Color.GREEN);
-        Label availableLabel = new Label("Свободно");
-        availableBox.getChildren().addAll(availableRect, availableLabel);
+        int seatNumber = row * 100 + seat;
+        final boolean[] selected = {false};
 
-        VBox selectedBox = new VBox(5);
-        Rectangle selectedRect = new Rectangle(20, 20, Color.BLUE);
-        Label selectedLabel = new Label("Выбрано");
-        selectedBox.getChildren().addAll(selectedRect, selectedLabel);
+        String freeStyle =
+                "-fx-font-size: 8; -fx-padding: 2;" +
+                        "-fx-background-color: #1db954;" +
+                        "-fx-text-fill: white;" +
+                        "-fx-border-radius: 5; -fx-background-radius: 5;" +
+                        "-fx-cursor: hand;";
 
-        VBox occupiedBox = new VBox(5);
-        Rectangle occupiedRect = new Rectangle(20, 20, Color.RED);
-        Label occupiedLabel = new Label("Занято");
-        occupiedBox.getChildren().addAll(occupiedRect, occupiedLabel);
+        String selectedStyle =
+                "-fx-font-size: 8; -fx-padding: 2;" +
+                        "-fx-background-color: #4a9eff;" +
+                        "-fx-text-fill: white;" +
+                        "-fx-border-radius: 5; -fx-background-radius: 5;" +
+                        "-fx-cursor: hand;" +
+                        "-fx-effect: dropshadow(gaussian, rgba(74,158,255,0.6), 8, 0, 0, 0);";
 
-        legend.getChildren().addAll(availableBox, selectedBox, occupiedBox);
-        return legend;
-    }
+        String occupiedStyle =
+                "-fx-font-size: 8; -fx-padding: 2;" +
+                        "-fx-background-color: #e50914;" +
+                        "-fx-text-fill: white;" +
+                        "-fx-border-radius: 5; -fx-background-radius: 5;";
 
-    private void updateSeatAvailability() {
-        if (currentSession == null) return;
-
-        for (int row = 1; row <= rows; row++) {
-            for (int seat = 1; seat <= seatsPerRow; seat++) {
-                Button seatButton = getSeatButton(row, seat);
-                if (seatButton != null) {
-                    boolean isAvailable = ticketDAO.isSeatAvailable(currentSession.getId(), row, seat);
-                    if (!isAvailable) {
-                        seatButton.setStyle("-fx-background-color: #ff4444; -fx-text-fill: white;");
-                        seatButton.setDisable(true);
-                    } else {
-                        seatButton.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white;");
-                        seatButton.setDisable(false);
-                    }
-                }
-            }
-        }
-    }
-
-    private Button getSeatButton(int row, int seat) {
-        for (javafx.scene.Node node : seatsGrid.getChildren()) {
-            if (node instanceof Button) {
-                Integer rowIndex = GridPane.getRowIndex(node);
-                Integer colIndex = GridPane.getColumnIndex(node);
-                if (rowIndex != null && colIndex != null &&
-                        rowIndex == row - 1 && colIndex == seat) {
-                    return (Button) node;
-                }
-            }
-        }
-        return null;
-    }
-
-    private void onSeatSelect(int row, int seat, Button button) {
-        String seatKey = row + "-" + seat;
-
-        if (selectedSeats.contains(seatKey)) {
-            selectedSeats.remove(seatKey);
-            button.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white;");
+        if (ticketDAO.isSeatOccupied(sessionId, seatNumber)) {
+            btn.setStyle(occupiedStyle);
+            btn.setDisable(true);
         } else {
-            selectedSeats.add(seatKey);
-            button.setStyle("-fx-background-color: #2196F3; -fx-text-fill: white;");
+            btn.setStyle(freeStyle);
+            btn.setOnAction(e -> {
+                if (!selected[0]) {
+                    btn.setStyle(selectedStyle);
+                    selectedSeats.add(seatNumber);
+                    selected[0] = true;
+                } else {
+                    btn.setStyle(freeStyle);
+                    selectedSeats.remove(Integer.valueOf(seatNumber));
+                    selected[0] = false;
+                }
+                updateBottomBar();
+            });
         }
-
-        updateSelectionInfo();
+        return btn;
     }
 
-    private void updateSelectionInfo() {
+    private VBox createLegendBox() {
+        VBox box = new VBox(10);
+        box.setPadding(new Insets(16));
+        box.setStyle(
+                "-fx-border-color: #2a2a5a;" +
+                        "-fx-border-radius: 10;" +
+                        "-fx-background-color: #16213e;" +
+                        "-fx-background-radius: 10;"
+        );
+
+        Label title = new Label("Легенда:");
+        title.setStyle("-fx-font-weight: bold; -fx-font-size: 12; -fx-text-fill: #d0d0d0;");
+
+        HBox items = new HBox(30);
+        items.setAlignment(Pos.CENTER_LEFT);
+        items.getChildren().addAll(
+                legendItem("#1db954", "Свободное"),
+                legendItem("#4a9eff", "Выбранное"),
+                legendItem("#e50914", "Занято")
+        );
+
+        box.getChildren().addAll(title, items);
+        return box;
+    }
+
+    private HBox legendItem(String color, String text) {
+        HBox hbox = new HBox(8);
+        hbox.setAlignment(Pos.CENTER_LEFT);
+
+        Button btn = new Button();
+        btn.setPrefSize(26, 26);
+        btn.setStyle(
+                "-fx-background-color: " + color + ";" +
+                        "-fx-border-radius: 4; -fx-background-radius: 4;"
+        );
+        btn.setDisable(true);
+
+        Label label = new Label(text);
+        label.setStyle("-fx-font-size: 11; -fx-text-fill: #d0d0d0;");
+
+        hbox.getChildren().addAll(btn, label);
+        return hbox;
+    }
+
+    // нижняя панель
+    private void updateBottomBar() {
+        if (selectedSeatsLabel == null || totalPriceLabel == null) return;
+
         if (selectedSeats.isEmpty()) {
             selectedSeatsLabel.setText("Выбранные места: нет");
             totalPriceLabel.setText("Общая стоимость: 0 руб.");
             bookButton.setDisable(true);
-            buyButton.setDisable(true);
-        } else {
-            selectedSeatsLabel.setText("Выбранные места: " + String.join(", ", selectedSeats));
-            double totalPrice = selectedSeats.size() * currentSession.getPrice();
-            totalPriceLabel.setText("Общая стоимость: " + totalPrice + " руб.");
-            bookButton.setDisable(false);
-            buyButton.setDisable(false);
-        }
-    }
-
-    @FXML
-    protected void onBookClick() {
-        if (selectedSeats.isEmpty()) {
-            showAlert("Ошибка", "Выберите хотя бы одно место");
             return;
         }
 
-        boolean success = true;
-        for (String seat : selectedSeats) {
-            String[] parts = seat.split("-");
-            int row = Integer.parseInt(parts[0]);
-            int seatNum = Integer.parseInt(parts[1]);
-
-            Ticket ticket = new Ticket(currentSession.getId(), currentUser.getId(),
-                    row, seatNum, currentSession.getPrice());
-
-            if (!ticketDAO.bookTicket(ticket)) {
-                success = false;
-                break;
-            }
+        StringBuilder sb = new StringBuilder();
+        for (Integer s : selectedSeats) {
+            if (sb.length() > 0) sb.append(", ");
+            sb.append(s / 100).append("-").append(s % 100);
         }
 
-        if (success) {
-            showSuccessAlert("Успех", "Билеты успешно забронированы! Номера мест: " +
-                    String.join(", ", selectedSeats));
-            clearSelection();
-            updateSeatAvailability();
-        } else {
-            showAlert("Ошибка", "Не удалось забронировать некоторые места");
-        }
+        double total = selectedSeats.size() * TICKET_PRICE;
+        selectedSeatsLabel.setText("Выбранные места: " + sb);
+        totalPriceLabel.setText("Общая стоимость: " + total + " руб.");
+        bookButton.setDisable(false);
     }
 
+    // бронирование
     @FXML
-    protected void onBuyOnlineClick() {
+    protected void onBookClick(ActionEvent event) {
+        if (currentUser == null || currentUser.isGuest()) { showAuthError(); return; }
         if (selectedSeats.isEmpty()) {
-            showAlert("Ошибка", "Выберите хотя бы одно место");
+            showAlert(Alert.AlertType.WARNING, "Ошибка", "Выберите места для бронирования");
             return;
         }
-
-        showSuccessAlert("Онлайн оплата",
-                "Переход на страницу оплаты...\nВыбранные места: " + String.join(", ", selectedSeats) +
-                        "\nОбщая сумма: " + (selectedSeats.size() * currentSession.getPrice()) + " руб.");
-
-        clearSelection();
-        updateSeatAvailability();
+        try {
+            for (int seat : selectedSeats) {
+                Ticket t = new Ticket();
+                t.setUserId(currentUser.getId());
+                t.setSessionId(selectedSession.getId());
+                t.setSeatNumber(seat);
+                t.setTotalPrice(TICKET_PRICE);
+                t.setStatus("BOOKED");
+                ticketDAO.createTicket(t);
+            }
+            showAlert(Alert.AlertType.INFORMATION, "Успех",
+                    "Билеты забронированы!\nМест: " + selectedSeats.size() +
+                            "\nСумма: " + (selectedSeats.size() * TICKET_PRICE) + " руб.");
+            goBackToMovies();
+        } catch (Exception e) {
+            showAlert(Alert.AlertType.ERROR, "❌ Ошибка", "Не удалось забронировать билеты");
+            e.printStackTrace();
+        }
     }
 
     @FXML
-    protected void onCancelClick(ActionEvent event) throws IOException {
-        loadScene("sessions.fxml", "Сеансы", event);
+    protected void onCancelClick(ActionEvent event) {
+        goBackToMovies();
     }
 
-    private void clearSelection() {
-        for (String seat : selectedSeats) {
-            String[] parts = seat.split("-");
-            int row = Integer.parseInt(parts[0]);
-            int seatNum = Integer.parseInt(parts[1]);
-
-            Button seatButton = getSeatButton(row, seatNum);
-            if (seatButton != null) {
-                seatButton.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white;");
-            }
+    // назад
+    private void goBackToMovies() {
+        try {
+            FXMLLoader loader = new FXMLLoader(CinemaApp.class.getResource("movies.fxml"));
+            Scene scene = new Scene(loader.load());
+            MoviesController controller = loader.getController();
+            controller.setCurrentUser(currentUser);
+            Stage stage = (Stage) seatsContainer.getScene().getWindow();
+            stage.setTitle("CineMax - Фильмы");
+            stage.setScene(scene);
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        selectedSeats.clear();
-        updateSelectionInfo();
     }
 
-    private void loadScene(String fxmlFile, String title, ActionEvent event) throws IOException {
-        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource(fxmlFile));
-        Scene scene = new Scene(fxmlLoader.load(), 1000, 700);
-
-        SessionsController controller = fxmlLoader.getController();
-        controller.setCurrentUser(currentUser);
-
-        Stage stage = (Stage) ((Button) event.getSource()).getScene().getWindow();
-        stage.setTitle(title);
-        stage.setScene(scene);
-        stage.show();
+    private void showAuthError() {
+        showAlert(Alert.AlertType.WARNING, "⚠️ Ошибка",
+                "Гостям запрещено бронировать билеты\nАвторизуйтесь.");
     }
 
-    private void showAlert(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
-    }
-
-    private void showSuccessAlert(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+    private void showAlert(Alert.AlertType type, String title, String message) {
+        Alert alert = new Alert(type);
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(message);

@@ -1,0 +1,97 @@
+.table-view {
+        -fx-background-color: #16213e;
+        -fx-border-color: #2a2a5a;
+        }
+
+        .table-view .column-header-background {
+        -fx-background-color: #1e2d50;
+        }
+
+        .table-view .column-header,
+        .table-view .filler {
+        -fx-background-color: #1e2d50;
+        -fx-border-color: #2a2a5a;
+        -fx-size: 38;
+        }
+
+        .table-view .column-header .label {
+        -fx-text-fill: #ffffff;
+        -fx-font-weight: bold;
+        -fx-font-size: 13;
+        }
+
+        .table-row-cell {
+        -fx-background-color: #16213e;
+        -fx-border-color: #2a2a5a;
+        -fx-text-fill: #e0e0e0;
+        }
+
+        .table-row-cell:odd {
+        -fx-background-color: #1a2540;
+        }
+
+        .table-row-cell:selected {
+        -fx-background-color: #e50914;
+        }
+
+        .table-row-cell .text {
+        -fx-fill: #e0e0e0;
+        }
+
+        .table-row-cell:selected .text {
+        -fx-fill: #ffffff;
+        }
+
+        .table-view .table-cell {
+        -fx-text-fill: #e0e0e0;
+        -fx-border-color: #2a2a5a;
+        -fx-font-size: 13;
+        }
+
+        .scroll-bar:vertical,
+        .scroll-bar:horizontal {
+        -fx-background-color: #0f0f0f;
+        }
+
+        .scroll-bar .thumb {
+        -fx-background-color: #2a2a5a;
+        -fx-background-radius: 4;
+        }
+
+        .tab-pane .tab-header-area .tab-header-background {
+        -fx-background-color: #16213e;
+        }
+
+        .tab-pane .tab {
+        -fx-background-color: #1a2540;
+        -fx-border-color: #2a2a5a;
+        -fx-padding: 8 16;
+        }
+
+        .tab-pane .tab .tab-label {
+        -fx-text-fill: #a0a0a0;
+        -fx-font-size: 13;
+        }
+
+        .tab-pane .tab:selected {
+        -fx-background-color: #e50914;
+        }
+
+        .tab-pane .tab:selected .tab-label {
+        -fx-text-fill: #ffffff;
+        -fx-font-weight: bold;
+        }
+
+        .text-area {
+        -fx-background-color: #22294a;
+        -fx-control-inner-background: #22294a;
+        -fx-text-fill: #ffffff;
+        -fx-prompt-text-fill: #7a7a9a;
+        -fx-border-color: #3a3a6a;
+        -fx-border-radius: 6;
+        -fx-background-radius: 6;
+        }
+
+        .text-area .content {
+        -fx-background-color: #22294a;
+        }

@@ -9,12 +9,21 @@ import javafx.stage.Stage;
 public class CinemaApp extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
-        // Инициализация базы данных
-        DatabaseConnection.initializeDatabase();
 
-        Parent root = FXMLLoader.load(getClass().getResource("main.fxml"));
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/cinema/ticket/main.fxml"));
+        Parent root = loader.load();
+
+        Scene scene = new Scene(root, 1200, 800);
+
+        var cssUrl = getClass().getResource("/com/cinema/ticket/dark-table.css");
+        if (cssUrl != null) {
+            scene.getStylesheets().add(cssUrl.toExternalForm());
+        } else {
+        }
+
         primaryStage.setTitle("CineMax - Кинотеатр");
-        primaryStage.setScene(new Scene(root, 800, 600));
+        primaryStage.setScene(scene);
+        primaryStage.setResizable(true);
         primaryStage.show();
     }
 

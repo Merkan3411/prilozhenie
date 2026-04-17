@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<VBox xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.cinema.ticket.controllers.MovieCardController"
+      spacing="10.0" prefWidth="220.0" maxWidth="260.0" alignment="CENTER"
+      style="-fx-background-color: #16213e;
+             -fx-background-radius: 14;
+             -fx-border-color: #2a2a5a;
+             -fx-border-radius: 14;
+             -fx-border-width: 1;
+             -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.7), 18, 0, 0, 5);
+             -fx-padding: 12;">
+
+    <StackPane style="-fx-background-color: #0f0f1a;
+                      -fx-background-radius: 10;">
+        <ImageView fx:id="posterImage"
+                   fitWidth="200.0" fitHeight="290.0"
+                   preserveRatio="true" smooth="true" cache="true"/>
+    </StackPane>
+
+    <Label fx:id="titleLabel" wrapText="true"
+           alignment="CENTER" textAlignment="CENTER"
+           style="-fx-font-weight: bold;
+                  -fx-font-size: 14;
+                  -fx-text-fill: #ffffff;
+                  -fx-padding: 6 0 2 0;"/>
+
+    <HBox alignment="CENTER" spacing="8.0">
+        <Label fx:id="genreLabel"
+               style="-fx-font-size: 12; -fx-text-fill: #c0c0c0;"/>
+        <Label text="•" style="-fx-text-fill: #555; -fx-font-size: 12;"/>
+        <Label fx:id="durationLabel"
+               style="-fx-font-size: 12; -fx-text-fill: #c0c0c0;"/>
+    </HBox>
+
+    <HBox alignment="CENTER" spacing="8.0">
+        <Label fx:id="ratingLabel"
+               style="-fx-font-size: 13;
+                      -fx-text-fill: #ffc107;
+                      -fx-font-weight: bold;"/>
+        <Button fx:id="reviewsButton" text="Отзывы"
+                mnemonicParsing="false"
+                style="-fx-background-color: transparent;
+                       -fx-text-fill: #4a9eff;
+                       -fx-border-color: #4a9eff;
+                       -fx-border-width: 1;
+                       -fx-border-radius: 6;
+                       -fx-background-radius: 6;
+                       -fx-padding: 3 10;
+                       -fx-font-size: 11;
+                       -fx-cursor: hand;"/>
+    </HBox>
+
+    <Label fx:id="descriptionLabel" wrapText="true"
+           alignment="CENTER" textAlignment="CENTER"
+           style="-fx-font-size: 11;
+                  -fx-text-fill: #9090b0;
+                  -fx-padding: 4 0 10 0;
+                  -fx-line-spacing: 2;"/>
+
+    <HBox alignment="CENTER" spacing="8.0">
+        <Button fx:id="bookButton" text="Забронировать"
+                mnemonicParsing="false"
+                prefHeight="44.0" prefWidth="150.0"
+                style="-fx-background-color: #e50914;
+                       -fx-text-fill: white;
+                       -fx-font-size: 13;
+                       -fx-font-weight: bold;
+                       -fx-background-radius: 10;
+                       -fx-cursor: hand;
+                       -fx-effect: dropshadow(gaussian, rgba(229,9,20,0.45), 14, 0, 0, 4);"/>
+        <Button fx:id="trailerButton" text="▶"
+                mnemonicParsing="false"
+                prefHeight="44.0" prefWidth="44.0"
+                style="-fx-background-color: #1e2d50;
+                       -fx-text-fill: #ffc107;
+                       -fx-font-size: 16;
+                       -fx-font-weight: bold;
+                       -fx-background-radius: 10;
+                       -fx-border-color: #ffc107;
+                       -fx-border-width: 1;
+                       -fx-border-radius: 10;
+                       -fx-cursor: hand;"/>
+    </HBox>
+
+    <padding>
+        <Insets bottom="6.0" left="6.0" right="6.0" top="6.0"/>
+    </padding>
+</VBox>

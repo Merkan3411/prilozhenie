@@ -1,22 +1,24 @@
 package com.cinema.ticket.controllers;
 
+import com.cinema.ticket.CinemaApp;
 import com.cinema.ticket.dao.MovieDAO;
-import com.cinema.ticket.dao.SessionDAO;
 import com.cinema.ticket.models.Movie;
-import com.cinema.ticket.models.Session;
 import com.cinema.ticket.models.User;
+import javafx.application.Platform;
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -24,212 +26,187 @@ import java.util.List;
 
 public class MoviesController {
 
+    @FXML private Label welcomeLabel;
     @FXML private TextField searchField;
     @FXML private GridPane moviesGrid;
-    @FXML private ScrollPane newMoviesPane;
-    @FXML private HBox newMoviesBox;
-    @FXML private ScrollPane recommendedPane;
-    @FXML private HBox recommendedBox;
-    @FXML private Label welcomeLabel;
 
-    private MovieDAO movieDAO = new MovieDAO();
-    private SessionDAO sessionDAO = new SessionDAO();
     private User currentUser;
+    private final MovieDAO movieDAO = new MovieDAO();
+    private List<Movie> allMovies;  // хранит все фильмы из БД
+
+    private static final int CARDS_PER_ROW = 4;
 
     @FXML
     public void initialize() {
         loadMovies();
-        loadNewMovies();
-        loadRecommended();
+
+        // Авто-фильтрация по вводу текста
+        searchField.textProperty().addListener((obs, oldText, newText) -> filterMovies(newText));
     }
 
     public void setCurrentUser(User user) {
         this.currentUser = user;
-        if (user != null) {
-            welcomeLabel.setText("Добро пожаловать, " + user.getFullName() + "!");
+
+        if (user != null && !user.isGuest()) {
+            welcomeLabel.setText("🎬 Фильмы, " + user.getFullName());
         } else {
-            welcomeLabel.setText("Добро пожаловать, Гость!");
+            welcomeLabel.setText("🎬 Фильмы");
         }
+
+        loadMovies();
     }
 
     private void loadMovies() {
-        moviesGrid.getChildren().clear();
-        List<Movie> movies = movieDAO.getAllMovies();
-
-        int column = 0;
-        int row = 0;
-        int columns = 3;
-
-        for (Movie movie : movies) {
-            VBox movieCard = createMovieCard(movie);
-            moviesGrid.add(movieCard, column, row);
-
-            column++;
-            if (column >= columns) {
-                column = 0;
-                row++;
+        Task<List<Movie>> task = new Task<>() {
+            @Override
+            protected List<Movie> call() {
+                return movieDAO.getAllMovies();
             }
-        }
+        };
+
+        task.setOnSucceeded(e -> {
+            allMovies = task.getValue();
+            Platform.runLater(() -> displayMovies(allMovies));
+        });
+
+        task.setOnFailed(e -> {
+            task.getException().printStackTrace();
+            Platform.runLater(() -> {
+                Label error = new Label("Ошибка загрузки фильмов");
+                moviesGrid.add(error, 0, 0);
+            });
+        });
+
+        new Thread(task).start();
     }
 
-    private void loadNewMovies() {
-        newMoviesBox.getChildren().clear();
-        List<Movie> newMovies = movieDAO.getNewMovies();
+    private void filterMovies(String query) {
+        if (allMovies == null) return;
 
-        for (Movie movie : newMovies) {
-            VBox movieCard = createMovieCard(movie);
-            newMoviesBox.getChildren().add(movieCard);
-        }
-    }
-
-    private void loadRecommended() {
-        recommendedBox.getChildren().clear();
-        List<Movie> recommended = movieDAO.getNewMovies();
-
-        for (Movie movie : recommended) {
-            VBox movieCard = createMovieCard(movie);
-            recommendedBox.getChildren().add(movieCard);
-        }
-    }
-
-    private VBox createMovieCard(Movie movie) {
-        VBox card = new VBox();
-        card.setSpacing(10);
-        card.setStyle("-fx-padding: 15; -fx-border-color: #ddd; -fx-border-radius: 5; -fx-background-radius: 5;");
-        card.setPrefWidth(250);
-
-        ImageView poster = new ImageView();
-        poster.setFitWidth(200);
-        poster.setFitHeight(300);
-        poster.setPreserveRatio(true);
-
-        try {
-            if (movie.getPosterUrl() != null && !movie.getPosterUrl().isEmpty()) {
-                poster.setImage(new Image(movie.getPosterUrl()));
-            } else {
-                poster.setImage(new Image("https://via.placeholder.com/200x300/cccccc/969696?text=No+Image"));
-            }
-        } catch (Exception e) {
-            poster.setImage(new Image("https://via.placeholder.com/200x300/cccccc/969696?text=Error"));
-        }
-
-        Label titleLabel = new Label(movie.getTitle());
-        titleLabel.setFont(Font.font("System", FontWeight.BOLD, 14));
-        titleLabel.setWrapText(true);
-        titleLabel.setMaxWidth(200);
-
-        Label detailsLabel = new Label(movie.getGenre() + " • " + movie.getRating() + " ★");
-        detailsLabel.setStyle("-fx-text-fill: #666;");
-
-        Label ageLabel = new Label(movie.getAgeRating());
-        ageLabel.setStyle("-fx-background-color: #ff4444; -fx-text-fill: white; -fx-padding: 2 5; -fx-background-radius: 3;");
-
-        Button selectButton = new Button("Выбрать сеанс");
-        selectButton.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white;");
-        selectButton.setOnAction(e -> onMovieSelect(movie));
-
-        card.getChildren().addAll(poster, titleLabel, detailsLabel, ageLabel, selectButton);
-        return card;
-    }
-
-    private void onMovieSelect(Movie movie) {
-        try {
-            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("sessions.fxml"));
-            Scene scene = new Scene(fxmlLoader.load(), 1000, 700);
-
-            SessionsController controller = fxmlLoader.getController();
-            controller.setCurrentMovie(movie);
-            controller.setCurrentUser(currentUser);
-
-            Stage stage = (Stage) searchField.getScene().getWindow();
-            stage.setTitle("Сеансы - " + movie.getTitle());
-            stage.setScene(scene);
-            stage.show();
-        } catch (IOException e) {
-            e.printStackTrace();
-            showAlert("Ошибка", "Не удалось загрузить страницу сеансов");
-        }
-    }
-
-    @FXML
-    protected void onSearchClick() {
-        String query = searchField.getText().trim().toLowerCase();
-
-        if (query.isEmpty()) {
-            loadMovies();
+        if (query == null || query.isBlank()) {
+            displayMovies(allMovies);
             return;
         }
 
+        String lowerQuery = query.toLowerCase();
+
+        List<Movie> filtered = allMovies.stream()
+                .filter(m -> m.getTitle().toLowerCase().contains(lowerQuery))
+                .toList();
+
+        displayMovies(filtered);
+    }
+
+    private void displayMovies(List<Movie> movies) {
         moviesGrid.getChildren().clear();
-        List<Movie> allMovies = movieDAO.getAllMovies();
+        moviesGrid.getColumnConstraints().clear();
 
-        int column = 0;
+        for (int i = 0; i < CARDS_PER_ROW; i++) {
+            ColumnConstraints col = new ColumnConstraints();
+            col.setPercentWidth(100.0 / CARDS_PER_ROW);
+            col.setHgrow(Priority.ALWAYS);
+            col.setMinWidth(220);
+            col.setPrefWidth(260);
+            moviesGrid.getColumnConstraints().add(col);
+        }
+
+        if (movies == null || movies.isEmpty()) {
+            Label empty = new Label("Нет доступных фильмов");
+            empty.setStyle("-fx-font-size: 18; -fx-text-fill: #64748b; -fx-font-weight: bold;");
+            empty.setAlignment(Pos.CENTER);
+            moviesGrid.add(empty, 0, 0);
+            GridPane.setColumnSpan(empty, CARDS_PER_ROW);
+            return;
+        }
+
+        int col = 0;
         int row = 0;
-        int columns = 3;
 
-        for (Movie movie : allMovies) {
-            if (movie.getTitle().toLowerCase().contains(query) ||
-                    movie.getGenre().toLowerCase().contains(query)) {
+        for (Movie movie : movies) {
+            try {
+                FXMLLoader loader = new FXMLLoader(
+                        getClass().getResource("/com/cinema/ticket/movie_card.fxml")
+                );
 
-                VBox movieCard = createMovieCard(movie);
-                moviesGrid.add(movieCard, column, row);
+                VBox card = loader.load();
+                MovieCardController controller = loader.getController();
+                controller.setData(movie, currentUser, this);
 
-                column++;
-                if (column >= columns) {
-                    column = 0;
+                GridPane.setHgrow(card, Priority.ALWAYS);
+                GridPane.setFillWidth(card, true);
+                GridPane.setMargin(card, new Insets(10));
+
+                moviesGrid.add(card, col, row);
+
+                col++;
+                if (col >= CARDS_PER_ROW) {
+                    col = 0;
                     row++;
                 }
+
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
+
+        moviesGrid.setAlignment(Pos.TOP_CENTER);
+        moviesGrid.setHgap(20);
+        moviesGrid.setVgap(24);
     }
 
     @FXML
-    protected void onProfileClick(ActionEvent event) throws IOException {
-        if (currentUser != null && !currentUser.isGuest()) {
-            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("profile.fxml"));
-            Scene scene = new Scene(fxmlLoader.load(), 1000, 700);
-
-            ProfileController controller = fxmlLoader.getController();
-            controller.setCurrentUser(currentUser);
-
-            Stage stage = (Stage) ((Button) event.getSource()).getScene().getWindow();
-            stage.setTitle("Мой профиль");
-            stage.setScene(scene);
-            stage.show();
-        } else {
-            showAlert("Ошибка", "Эта функция доступна только зарегистрированным пользователям");
-        }
-    }
-
-    @FXML
-    protected void onLogoutClick(ActionEvent event) throws IOException {
-        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("main.fxml"));
-        Scene scene = new Scene(fxmlLoader.load(), 800, 600);
-        Stage stage = (Stage) ((Button) event.getSource()).getScene().getWindow();
-        stage.setTitle("CineMax - Кинотеатр");
-        stage.setScene(scene);
-        stage.show();
+    protected void onSearchClick(ActionEvent event) {
+        filterMovies(searchField.getText());
     }
 
     @FXML
     protected void onSessionsClick(ActionEvent event) throws IOException {
-        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("sessions.fxml"));
-        Scene scene = new Scene(fxmlLoader.load(), 1000, 700);
-
-        SessionsController controller = fxmlLoader.getController();
-        controller.setCurrentUser(currentUser);
-
-        Stage stage = (Stage) ((Button) event.getSource()).getScene().getWindow();
-        stage.setTitle("Все сеансы");
+        FXMLLoader loader = new FXMLLoader(CinemaApp.class.getResource("sessions.fxml"));
+        Scene scene = new Scene(loader.load());
+        Stage stage = (Stage) moviesGrid.getScene().getWindow();
+        stage.setTitle("CineMax - Сеансы");
         stage.setScene(scene);
         stage.show();
     }
 
-    private void showAlert(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle(title);
+    @FXML
+    protected void onProfileClick(ActionEvent event) throws IOException {
+        FXMLLoader loader = new FXMLLoader(CinemaApp.class.getResource("profile.fxml"));
+        Scene scene = new Scene(loader.load());
+        ProfileController controller = loader.getController();
+        controller.setCurrentUser(currentUser);
+        Stage stage = (Stage) moviesGrid.getScene().getWindow();
+        stage.setTitle("CineMax - Профиль");
+        stage.setScene(scene);
+        stage.show();
+    }
+
+    void showWarning(String message) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Уведомление");
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
+    }
+
+    void onBookMovie(Movie movie) {
+        if (currentUser == null || currentUser.isGuest()) {
+            showWarning("Гостям запрещено бронировать билеты.\n\nПожалуйста, войдите или зарегистрируйтесь.");
+            return;
+        }
+
+        try {
+            FXMLLoader loader = new FXMLLoader(CinemaApp.class.getResource("booking.fxml"));
+            Scene scene = new Scene(loader.load());
+            BookingController controller = loader.getController();
+            controller.setMovie(movie);
+            controller.setCurrentUser(currentUser);
+            Stage stage = (Stage) moviesGrid.getScene().getWindow();
+            stage.setTitle("CineMax - Бронирование: " + movie.getTitle());
+            stage.setScene(scene);
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

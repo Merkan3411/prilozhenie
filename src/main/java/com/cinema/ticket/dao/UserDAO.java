@@ -1,89 +1,126 @@
 package com.cinema.ticket.dao;
 
-import com.cinema.ticket.User;
-import java.sql.*;
+import com.cinema.ticket.SupabaseClient;
+import com.cinema.ticket.models.User;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class UserDAO {
 
+    public User getUserByUsername(String username) {
+        try {
+            JsonArray results = SupabaseClient.select("users",
+                    "username=eq." + username + "&select=*");
+            if (results.size() > 0) {
+                return mapUser(results.get(0).getAsJsonObject());
+            }
+        } catch (Exception e) {
+            System.err.println("Error getting user by username: " + e.getMessage());
+        }
+        return null;
+    }
+
+    public User getUserById(int id) {
+        try {
+            JsonArray results = SupabaseClient.select("users",
+                    "id=eq." + id + "&select=*");
+            if (results.size() > 0) {
+                return mapUser(results.get(0).getAsJsonObject());
+            }
+        } catch (Exception e) {
+            System.err.println("Error getting user by ID: " + e.getMessage());
+        }
+        return null;
+    }
+
+    public List<User> getAllUsers() {
+        List<User> users = new ArrayList<>();
+        try {
+            JsonArray results = SupabaseClient.select("users", "select=*&order=id.desc");
+            for (JsonElement el : results) {
+                users.add(mapUser(el.getAsJsonObject()));
+            }
+        } catch (Exception e) {
+            System.err.println("Error getting all users: " + e.getMessage());
+        }
+        return users;
+    }
+
     public boolean createUser(User user) {
-        String sql = "INSERT INTO users (username, password, email, full_name, role) VALUES (?, ?, ?, ?, ?)";
-
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-            pstmt.setString(1, user.getUsername());
-            pstmt.setString(2, user.getPassword());
-            pstmt.setString(3, user.getEmail());
-            pstmt.setString(4, user.getFullName());
-            pstmt.setString(5, user.getRole());
-
-            return pstmt.executeUpdate() > 0;
-
-        } catch (SQLException e) {
+        try {
+            Map<String, Object> data = new HashMap<>();
+            data.put("full_name", user.getFullName());
+            data.put("email", user.getEmail());
+            data.put("username", user.getUsername());
+            data.put("password", user.getPassword());
+            data.put("role", user.getRole() != null ? user.getRole() : "USER");
+            SupabaseClient.insert("users", data);
+            return true;
+        } catch (Exception e) {
             System.err.println("Error creating user: " + e.getMessage());
             return false;
         }
     }
 
-    public User getUserByUsername(String username) {
-        String sql = "SELECT * FROM users WHERE username = ?";
-
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-            pstmt.setString(1, username);
-            ResultSet rs = pstmt.executeQuery();
-
-            if (rs.next()) {
-                User user = new User();
-                user.setId(rs.getInt("id"));
-                user.setUsername(rs.getString("username"));
-                user.setPassword(rs.getString("password"));
-                user.setEmail(rs.getString("email"));
-                user.setFullName(rs.getString("full_name"));
-                user.setRole(rs.getString("role"));
-                return user;
-            }
-
-        } catch (SQLException e) {
-            System.err.println("Error getting user: " + e.getMessage());
-        }
-        return null;
-    }
-
-    public boolean validateUser(String username, String password) {
-        String sql = "SELECT * FROM users WHERE username = ? AND password = ?";
-
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-            pstmt.setString(1, username);
-            pstmt.setString(2, password);
-            ResultSet rs = pstmt.executeQuery();
-
-            return rs.next();
-
-        } catch (SQLException e) {
-            System.err.println("Error validating user: " + e.getMessage());
+    public boolean updateUser(User user) {
+        try {
+            Map<String, Object> data = new HashMap<>();
+            data.put("full_name", user.getFullName());
+            data.put("email", user.getEmail());
+            data.put("role", user.getRole());
+            SupabaseClient.update("users", "id=eq." + user.getId(), data);
+            return true;
+        } catch (Exception e) {
             return false;
         }
     }
 
-    public boolean userExists(String username) {
-        String sql = "SELECT id FROM users WHERE username = ?";
-
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-            pstmt.setString(1, username);
-            ResultSet rs = pstmt.executeQuery();
-            return rs.next();
-
-        } catch (SQLException e) {
-            System.err.println("Error checking user existence: " + e.getMessage());
+    public boolean updatePassword(User user) {
+        try {
+            Map<String, Object> data = new HashMap<>();
+            data.put("password", user.getPassword());
+            SupabaseClient.update("users", "id=eq." + user.getId(), data);
+            return true;
+        } catch (Exception e) {
             return false;
         }
+    }
+
+    public boolean deleteUser(int id) {
+        try {
+            TicketDAO ticketDAO = new TicketDAO();
+            ticketDAO.deleteAllTicketsByUserId(id);
+            SupabaseClient.delete("users", "id=eq." + id);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public int getTotalUsersCount() {
+        try {
+            JsonArray results = SupabaseClient.select("users", "select=id");
+            return results.size();
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
+    private User mapUser(JsonObject json) {
+        User user = new User();
+        user.setId(json.get("id").getAsInt());
+        user.setFullName(json.get("full_name").getAsString());
+        user.setEmail(json.get("email").getAsString());
+        user.setUsername(json.get("username").getAsString());
+        user.setPassword(json.get("password").getAsString());
+        user.setRole(json.get("role").getAsString());
+        user.setActive(true);
+        return user;
     }
 }

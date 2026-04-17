@@ -1,0 +1,349 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<BorderPane style="-fx-background-color: #0f0f0f;"
+            xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.cinema.ticket.controllers.AdminPanelController">
+
+    <top>
+        <HBox spacing="20" alignment="CENTER_LEFT"
+              style="-fx-background-color: #16213e; -fx-padding: 15 25;
+                     -fx-effect: dropshadow(gaussian, rgba(229,9,20,0.15), 10, 0, 0, 3);">
+            <Label text="⚙" style="-fx-font-size: 22; -fx-text-fill: #e50914;"/>
+            <Label fx:id="adminNameLabel" text="Администратор"
+                   style="-fx-font-size: 16; -fx-font-weight: bold; -fx-text-fill: #ffffff;"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button text="Выход" onAction="#onLogoutClick"
+                    style="-fx-font-size: 13; -fx-padding: 9 22;
+                           -fx-background-color: #e50914; -fx-text-fill: white;
+                           -fx-background-radius: 8; -fx-cursor: hand;
+                           -fx-font-weight: bold;"/>
+        </HBox>
+    </top>
+
+    <center>
+        <TabPane fx:id="adminTabPane" tabClosingPolicy="UNAVAILABLE"
+                 style="-fx-background-color: #0f0f0f;
+                        -fx-tab-min-height: 42;
+                        -fx-font-size: 13;"
+                 tabMinWidth="120">
+
+            <Tab text="📽  Фильмы">
+                <ScrollPane fitToWidth="true"
+                            style="-fx-background-color: #0f0f0f;
+                                   -fx-background: #0f0f0f;
+                                   -fx-border-color: transparent;">
+                    <VBox spacing="15" style="-fx-padding: 20; -fx-background-color: #0f0f0f;">
+
+                        <VBox spacing="12"
+                              style="-fx-background-color: #16213e;
+                                     -fx-border-color: #2a2a5a;
+                                     -fx-border-radius: 10; -fx-background-radius: 10;
+                                     -fx-padding: 18;">
+                            <Label text="Добавить новый фильм"
+                                   style="-fx-font-size: 14; -fx-font-weight: bold;
+                                          -fx-text-fill: #ffffff;"/>
+
+                            <GridPane hgap="12" vgap="10">
+                                <Label text="Название:"
+                                       GridPane.columnIndex="0" GridPane.rowIndex="0"
+                                       style="-fx-text-fill: #d0d0d0;"/>
+                                <TextField fx:id="addMovieTitleField"
+                                           promptText="Название фильма"
+                                           GridPane.columnIndex="1" GridPane.rowIndex="0"
+                                           style="-fx-background-color: #22294a;
+                                                  -fx-text-fill: #ffffff;
+                                                  -fx-prompt-text-fill: #7a7a9a;
+                                                  -fx-border-color: #3a3a6a;
+                                                  -fx-border-radius: 6;
+                                                  -fx-background-radius: 6;
+                                                  -fx-padding: 8;"/>
+
+                                <Label text="Жанр:"
+                                       GridPane.columnIndex="2" GridPane.rowIndex="0"
+                                       style="-fx-text-fill: #d0d0d0;"/>
+                                <TextField fx:id="addMovieGenreField" promptText="Жанр"
+                                           GridPane.columnIndex="3" GridPane.rowIndex="0"
+                                           style="-fx-background-color: #22294a;
+                                                  -fx-text-fill: #ffffff;
+                                                  -fx-prompt-text-fill: #7a7a9a;
+                                                  -fx-border-color: #3a3a6a;
+                                                  -fx-border-radius: 6;
+                                                  -fx-background-radius: 6;
+                                                  -fx-padding: 8;"/>
+
+                                <Label text="Длительность:"
+                                       GridPane.columnIndex="4" GridPane.rowIndex="0"
+                                       style="-fx-text-fill: #d0d0d0;"/>
+                                <TextField fx:id="addMovieDurationField" promptText="мин"
+                                           GridPane.columnIndex="5" GridPane.rowIndex="0"
+                                           prefWidth="80"
+                                           style="-fx-background-color: #22294a;
+                                                  -fx-text-fill: #ffffff;
+                                                  -fx-prompt-text-fill: #7a7a9a;
+                                                  -fx-border-color: #3a3a6a;
+                                                  -fx-border-radius: 6;
+                                                  -fx-background-radius: 6;
+                                                  -fx-padding: 8;"/>
+                            </GridPane>
+
+                            <Label text="Описание:"
+                                   style="-fx-text-fill: #d0d0d0; -fx-font-size: 12;"/>
+                            <TextArea fx:id="addMovieDescriptionArea"
+                                      promptText="Описание фильма" prefRowCount="3"
+                                      style="-fx-background-color: #22294a;
+                                             -fx-text-fill: #ffffff;
+                                             -fx-prompt-text-fill: #7a7a9a;
+                                             -fx-border-color: #3a3a6a;
+                                             -fx-border-radius: 6;
+                                             -fx-background-radius: 6;
+                                             -fx-control-inner-background: #22294a;"/>
+
+                            <Label text="Ссылка на трейлер (RuTube / mp4):"
+                                   style="-fx-text-fill: #d0d0d0; -fx-font-size: 12;"/>
+                            <TextField fx:id="addMovieTrailerField"
+                                       promptText="https://rutube.ru/video/xxxxxxxxxxxxxxxxxxxxxxxx/"
+                                       style="-fx-background-color: #22294a;
+                                              -fx-text-fill: #ffffff;
+                                              -fx-prompt-text-fill: #7a7a9a;
+                                              -fx-border-color: #3a3a6a;
+                                              -fx-border-radius: 6;
+                                              -fx-background-radius: 6;
+                                              -fx-padding: 8;"/>
+
+                            <HBox spacing="10">
+                                <Button fx:id="addMovieButton" text="➕ Добавить"
+                                        onAction="#onAddMovieClick"
+                                        style="-fx-background-color: #1db954;
+                                               -fx-text-fill: white; -fx-font-weight: bold;
+                                               -fx-padding: 9 18; -fx-background-radius: 8;
+                                               -fx-cursor: hand;"/>
+                                <Button fx:id="editMovieButton" text="✎ Редактировать"
+                                        onAction="#onEditMovieClick"
+                                        style="-fx-background-color: #e59014;
+                                               -fx-text-fill: white; -fx-font-weight: bold;
+                                               -fx-padding: 9 18; -fx-background-radius: 8;
+                                               -fx-cursor: hand;"/>
+                                <Button fx:id="deleteMovieButton" text="🗑 Удалить"
+                                        onAction="#onDeleteMovieClick"
+                                        style="-fx-background-color: #e50914;
+                                               -fx-text-fill: white; -fx-font-weight: bold;
+                                               -fx-padding: 9 18; -fx-background-radius: 8;
+                                               -fx-cursor: hand;"/>
+                                <Button fx:id="uploadPosterButton" text="🖼 Загрузить постер"
+                                        onAction="#onUploadPosterClick"
+                                        style="-fx-background-color: #667eea;
+                                               -fx-text-fill: white; -fx-font-weight: bold;
+                                               -fx-padding: 9 18; -fx-background-radius: 8;
+                                               -fx-cursor: hand;"/>
+                            </HBox>
+                        </VBox>
+
+                        <Label text="Список фильмов"
+                               style="-fx-font-size: 13; -fx-font-weight: bold;
+                                      -fx-text-fill: #ffffff;"/>
+                        <TableView fx:id="moviesTable" prefHeight="280"
+                                   style="-fx-background-color: #16213e;
+                                          -fx-border-color: #2a2a5a;
+                                          -fx-border-radius: 8;
+                                          -fx-table-cell-border-color: #2a2a5a;
+                                          -fx-control-inner-background: #16213e;
+                                          -fx-selection-bar: #e50914;
+                                          -fx-selection-bar-non-focused: #8b0000;">
+                            <columns>
+                                <TableColumn fx:id="movieTitleColumn" text="Название"
+                                             prefWidth="260"
+                                             style="-fx-text-fill: #ffffff;"/>
+                                <TableColumn fx:id="movieGenreColumn" text="Жанр"
+                                             prefWidth="160"
+                                             style="-fx-text-fill: #ffffff;"/>
+                            </columns>
+                            <columnResizePolicy>
+                                <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
+                            </columnResizePolicy>
+                        </TableView>
+                    </VBox>
+                </ScrollPane>
+            </Tab>
+
+            <Tab text="👥  Пользователи">
+                <ScrollPane fitToWidth="true"
+                            style="-fx-background-color: #0f0f0f;
+                                   -fx-background: #0f0f0f;
+                                   -fx-border-color: transparent;">
+                    <VBox spacing="15" style="-fx-padding: 20; -fx-background-color: #0f0f0f;">
+
+                        <VBox spacing="10"
+                              style="-fx-background-color: #16213e;
+                                     -fx-border-color: #2a2a5a;
+                                     -fx-border-radius: 10; -fx-background-radius: 10;
+                                     -fx-padding: 18;">
+                            <Label text="⚙️ Действия с пользователями"
+                                   style="-fx-font-size: 13; -fx-font-weight: bold;
+                                          -fx-text-fill: #ffffff;"/>
+                            <HBox spacing="10">
+                                <Button text="👑 Назначить админом"
+                                        onAction="#onSetAdminClick"
+                                        style="-fx-background-color: #1db954;
+                                               -fx-text-fill: white; -fx-padding: 9 16;
+                                               -fx-background-radius: 8; -fx-font-weight: bold;
+                                               -fx-cursor: hand;"/>
+                                <Button text="⚠️ Снять админа"
+                                        onAction="#onRemoveAdminClick"
+                                        style="-fx-background-color: #e59014;
+                                               -fx-text-fill: white; -fx-padding: 9 16;
+                                               -fx-background-radius: 8; -fx-font-weight: bold;
+                                               -fx-cursor: hand;"/>
+                                <Button text="🗑 Удалить аккаунт"
+                                        onAction="#onDeleteAccountClick"
+                                        style="-fx-background-color: #e50914;
+                                               -fx-text-fill: white; -fx-padding: 9 16;
+                                               -fx-background-radius: 8; -fx-font-weight: bold;
+                                               -fx-cursor: hand;"/>
+                            </HBox>
+                        </VBox>
+
+                        <Label text="Список пользователей"
+                               style="-fx-font-size: 13; -fx-font-weight: bold;
+                                      -fx-text-fill: #ffffff;"/>
+                        <TableView fx:id="usersTable" prefHeight="380"
+                                   style="-fx-background-color: #16213e;
+                                          -fx-border-color: #2a2a5a;
+                                          -fx-border-radius: 8;
+                                          -fx-table-cell-border-color: #2a2a5a;
+                                          -fx-control-inner-background: #16213e;
+                                          -fx-selection-bar: #e50914;
+                                          -fx-selection-bar-non-focused: #8b0000;">
+                            <columns>
+                                <TableColumn fx:id="userNameColumn" text="ФИО" prefWidth="160"/>
+                                <TableColumn fx:id="userEmailColumn" text="Email" prefWidth="210"/>
+                                <TableColumn fx:id="userRoleColumn" text="Роль" prefWidth="100"/>
+                            </columns>
+                            <columnResizePolicy>
+                                <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
+                            </columnResizePolicy>
+                        </TableView>
+                    </VBox>
+                </ScrollPane>
+            </Tab>
+
+            <Tab text="🕐  Сеансы">
+                <ScrollPane fitToWidth="true"
+                            style="-fx-background-color: #0f0f0f;
+                                   -fx-background: #0f0f0f;
+                                   -fx-border-color: transparent;">
+                    <VBox spacing="15" style="-fx-padding: 20; -fx-background-color: #0f0f0f;">
+
+                        <VBox spacing="12"
+                              style="-fx-background-color: #16213e;
+                                     -fx-border-color: #2a2a5a;
+                                     -fx-border-radius: 10; -fx-background-radius: 10;
+                                     -fx-padding: 18;">
+                            <Label text="Добавить новый сеанс"
+                                   style="-fx-font-size: 14; -fx-font-weight: bold;
+                                          -fx-text-fill: #ffffff;"/>
+
+                            <GridPane hgap="12" vgap="10">
+                                <Label text="Фильм:"
+                                       GridPane.columnIndex="0" GridPane.rowIndex="0"
+                                       style="-fx-text-fill: #d0d0d0;"/>
+                                <ComboBox fx:id="movieComboBox"
+                                          GridPane.columnIndex="1" GridPane.rowIndex="0"
+                                          prefWidth="200"
+                                          style="-fx-background-color: #22294a;
+                                                 -fx-border-color: #3a3a6a;
+                                                 -fx-border-radius: 6;
+                                                 -fx-background-radius: 6;"/>
+
+                                <Label text="Время (HH:mm):"
+                                       GridPane.columnIndex="2" GridPane.rowIndex="0"
+                                       style="-fx-text-fill: #d0d0d0;"/>
+                                <TextField fx:id="sessionTimeField" promptText="18:00"
+                                           GridPane.columnIndex="3" GridPane.rowIndex="0"
+                                           style="-fx-background-color: #22294a;
+                                                  -fx-text-fill: #ffffff;
+                                                  -fx-prompt-text-fill: #7a7a9a;
+                                                  -fx-border-color: #3a3a6a;
+                                                  -fx-border-radius: 6;
+                                                  -fx-background-radius: 6;
+                                                  -fx-padding: 8;"/>
+
+                                <Label text="Номер зала:"
+                                       GridPane.columnIndex="4" GridPane.rowIndex="0"
+                                       style="-fx-text-fill: #d0d0d0;"/>
+                                <TextField fx:id="hallNumberField" promptText="1"
+                                           GridPane.columnIndex="5" GridPane.rowIndex="0"
+                                           prefWidth="80"
+                                           style="-fx-background-color: #22294a;
+                                                  -fx-text-fill: #ffffff;
+                                                  -fx-prompt-text-fill: #7a7a9a;
+                                                  -fx-border-color: #3a3a6a;
+                                                  -fx-border-radius: 6;
+                                                  -fx-background-radius: 6;
+                                                  -fx-padding: 8;"/>
+
+                                <Label text="Дата (ГГГГ-ММ-ДД):"
+                                       GridPane.columnIndex="0" GridPane.rowIndex="1"
+                                       style="-fx-text-fill: #d0d0d0;"/>
+                                <TextField fx:id="sessionDateField" promptText="2026-03-15"
+                                           GridPane.columnIndex="1" GridPane.rowIndex="1"
+                                           style="-fx-background-color: #22294a;
+                                                  -fx-text-fill: #ffffff;
+                                                  -fx-prompt-text-fill: #7a7a9a;
+                                                  -fx-border-color: #3a3a6a;
+                                                  -fx-border-radius: 6;
+                                                  -fx-background-radius: 6;
+                                                  -fx-padding: 8;"/>
+                            </GridPane>
+
+                            <HBox spacing="10">
+                                <Button fx:id="addSessionButton" text="➕ Добавить сеанс"
+                                        onAction="#onAddSessionClick"
+                                        style="-fx-background-color: #1db954;
+                                               -fx-text-fill: white; -fx-font-weight: bold;
+                                               -fx-padding: 9 18; -fx-background-radius: 8;
+                                               -fx-cursor: hand;"/>
+                                <Button fx:id="deleteSessionButton" text="🗑 Удалить сеанс"
+                                        onAction="#onDeleteSessionClick"
+                                        style="-fx-background-color: #e50914;
+                                               -fx-text-fill: white; -fx-font-weight: bold;
+                                               -fx-padding: 9 18; -fx-background-radius: 8;
+                                               -fx-cursor: hand;"/>
+                            </HBox>
+                        </VBox>
+
+                        <Label text="Список сеансов"
+                               style="-fx-font-size: 13; -fx-font-weight: bold;
+                                      -fx-text-fill: #ffffff;"/>
+                        <TableView fx:id="sessionsTable" prefHeight="280"
+                                   style="-fx-background-color: #16213e;
+                                          -fx-border-color: #2a2a5a;
+                                          -fx-border-radius: 8;
+                                          -fx-table-cell-border-color: #2a2a5a;
+                                          -fx-control-inner-background: #16213e;
+                                          -fx-selection-bar: #e50914;
+                                          -fx-selection-bar-non-focused: #8b0000;">
+                            <columns>
+                                <TableColumn fx:id="sessionMovieColumn" text="ID Фильма"
+                                             prefWidth="100"/>
+                                <TableColumn fx:id="sessionDateColumn" text="Дата"
+                                             prefWidth="120"/>
+                                <TableColumn fx:id="sessionTimeColumn" text="Время"
+                                             prefWidth="100"/>
+                                <TableColumn fx:id="sessionHallColumn" text="Зал"
+                                             prefWidth="80"/>
+                            </columns>
+                            <columnResizePolicy>
+                                <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
+                            </columnResizePolicy>
+                        </TableView>
+                    </VBox>
+                </ScrollPane>
+            </Tab>
+        </TabPane>
+    </center>
+</BorderPane>
