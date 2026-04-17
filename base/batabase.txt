@@ -1,0 +1,98 @@
+create table public.halls (
+  id serial not null,
+  name character varying(50) not null,
+  capacity integer not null,
+  rows integer not null,
+  seats_per_row integer not null,
+  created_at timestamp without time zone null default CURRENT_TIMESTAMP,
+  constraint halls_pkey primary key (id)
+) TABLESPACE pg_default;
+
+
+create table public.movies (
+  id serial not null,
+  title character varying(200) not null,
+  description text null,
+  genre character varying(100) null,
+  duration integer null,
+  age_rating character varying(10) null,
+  rating numeric(3, 1) null default 0.0,
+  poster_url character varying(300) null,
+  trailer_url character varying(300) null,
+  is_active boolean null default true,
+  created_at timestamp without time zone null default CURRENT_TIMESTAMP,
+  constraint movies_pkey primary key (id)
+) TABLESPACE pg_default;
+
+
+create table public.reviews (
+  id serial not null,
+  ticket_id integer not null,
+  movie_id integer not null,
+  user_id integer not null,
+  rating numeric(2, 1) not null,
+  review_text text null,
+  created_at timestamp without time zone null default CURRENT_TIMESTAMP,
+  constraint reviews_pkey primary key (id),
+  constraint reviews_ticket_id_key unique (ticket_id),
+  constraint reviews_movie_id_fkey foreign KEY (movie_id) references movies (id) on delete CASCADE,
+  constraint reviews_ticket_id_fkey foreign KEY (ticket_id) references tickets (id) on delete CASCADE,
+  constraint reviews_user_id_fkey foreign KEY (user_id) references users (id) on delete CASCADE,
+  constraint reviews_rating_check check (
+    (
+      (rating >= (1)::numeric)
+      and (rating <= (10)::numeric)
+    )
+  )
+) TABLESPACE pg_default;
+
+create trigger reviews_update_movie_rating
+after INSERT
+or DELETE
+or
+update on reviews for EACH row
+execute FUNCTION trg_reviews_update_movie_rating ();
+
+
+create table public.sessions (
+  id serial not null,
+  movie_id integer null,
+  hall_id integer null,
+  session_date date not null,
+  session_time time without time zone not null,
+  price numeric(8, 2) not null,
+  available_seats integer not null,
+  created_at timestamp without time zone null default CURRENT_TIMESTAMP,
+  constraint sessions_pkey primary key (id),
+  constraint sessions_hall_id_fkey foreign KEY (hall_id) references halls (id),
+  constraint sessions_movie_id_fkey foreign KEY (movie_id) references movies (id)
+) TABLESPACE pg_default;
+
+
+create table public.tickets (
+  id serial not null,
+  session_id integer null,
+  user_id integer null,
+  row_number integer not null,
+  seat_number integer not null,
+  purchase_date timestamp without time zone null default CURRENT_TIMESTAMP,
+  status character varying(20) null default 'BOOKED'::character varying,
+  qr_code character varying(500) null,
+  total_price numeric(8, 2) not null,
+  constraint tickets_pkey primary key (id),
+  constraint tickets_session_id_fkey foreign KEY (session_id) references sessions (id),
+  constraint tickets_user_id_fkey foreign KEY (user_id) references users (id)
+) TABLESPACE pg_default;
+
+
+create table public.users (
+  id serial not null,
+  username character varying(50) not null,
+  password character varying(100) not null,
+  email character varying(100) not null,
+  full_name character varying(100) not null,
+  role character varying(20) null default 'CLIENT'::character varying,
+  created_at timestamp without time zone null default CURRENT_TIMESTAMP,
+  constraint users_pkey primary key (id),
+  constraint users_username_key unique (username)
+) TABLESPACE pg_default;
